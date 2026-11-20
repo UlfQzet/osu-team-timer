@@ -51,24 +51,44 @@ else:
         "🌐 https://bohpts.com/ru/"
     )
 
+# Кнопка живого таймера
+BUTTON = json.dumps({
+    "inline_keyboard": [[{
+        "text": "⏳ ЖИВОЙ ТАЙМЕР OSU TEAM",
+        "url": "https://ulfqzet.github.io/osu-team-countdown/"
+    }]]
+})
+
 chat = api("getChat", {"chat_id": CHAT_ID})
-pinned = chat.get("pinned_message", {})
+pinned = chat.get("pinned_message") or {}
 
 if (
-    pinned.get("from", {}).get("is_bot")
+    pinned.get("from", {}).get("id")
+    and pinned.get("from", {}).get("is_bot")
     and MARKER in pinned.get("text", "")
 ):
-    if pinned["text"] != message:
+    message_id = pinned["message_id"]
+
+    if pinned.get("text") != message:
         api("editMessageText", {
             "chat_id": CHAT_ID,
-            "message_id": pinned["message_id"],
+            "message_id": message_id,
             "text": message,
             "disable_web_page_preview": "true"
         })
+
+    # Добавляем кнопку даже если текст не изменился
+    api("editMessageReplyMarkup", {
+        "chat_id": CHAT_ID,
+        "message_id": message_id,
+        "reply_markup": BUTTON
+    })
+
 else:
     sent = api("sendMessage", {
         "chat_id": CHAT_ID,
         "text": message,
+        "reply_markup": BUTTON,
         "disable_web_page_preview": "true"
     })
 
@@ -77,3 +97,5 @@ else:
         "message_id": sent["message_id"],
         "disable_notification": "true"
     })
+
+
